@@ -1,11 +1,19 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { calculateEstimate, formatCurrency } from '../lib/calculateEstimate';
 import { COMPLEXITIES, DEFAULT_INPUT, PLATFORMS, PROJECT_STAGES, PROJECT_TYPES, SERVICES, TIMELINES } from '../lib/pricing';
-import type { CalculatorInput, Complexity, Platform, ProjectStage, Timeline } from '../lib/types';
+import type { CalculatorInput, Complexity, Currency, Platform, ProjectStage, Timeline } from '../lib/types';
 
 type Choice = { id: string; label: string; description?: string; multiplier?: number };
+
+const CURRENCIES: { id: Currency; label: string }[] = [
+  { id: 'USD', label: '$ USD' },
+  { id: 'EUR', label: '€ EUR' },
+  { id: 'RUB', label: '₽ RUB' },
+];
+const FALLBACK_RATES: Record<Currency, number> = { USD: 1, EUR: 0.86, RUB: 84 };
+const formatRate = (value: number) => String(Math.round(value * 100) / 100);
 
 function ChoiceCards({ legend, choices, value, onChange, compact = false }: { legend: string; choices: Choice[]; value: string; onChange: (value: string) => void; compact?: boolean }) {
   return (
@@ -31,6 +39,7 @@ export default function Home() {
   const [input, setInput] = useState<CalculatorInput>(DEFAULT_INPUT);
   const [screensText, setScreensText] = useState(String(DEFAULT_INPUT.screens));
   const [rateText, setRateText] = useState(String(DEFAULT_INPUT.hourlyRate));
+  const [currencyRates, setCurrencyRates] = useState(FALLBACK_RATES);
   const [copied, setCopied] = useState(false);
   const result = useMemo(() => calculateEstimate(input), [input]);
   const project = PROJECT_TYPES.find((item) => item.id === input.projectType)!;
@@ -39,8 +48,35 @@ export default function Home() {
   const screenError = screensText === '' || !Number.isInteger(screenValue) || screenValue < 1 || screenValue > 200;
   const rateError = rateText === '' || !Number.isFinite(rateValue) || rateValue <= 0;
 
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('https://open.er-api.com/v6/latest/USD', { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error('Exchange rate request failed');
+        return response.json() as Promise<{ result?: string; rates?: Partial<Record<Currency, number>> }>;
+      })
+      .then((data) => {
+        if (data.result !== 'success') return;
+        const eur = data.rates?.EUR;
+        const rub = data.rates?.RUB;
+        if (typeof eur === 'number' && eur > 0 && typeof rub === 'number' && rub > 0) {
+          setCurrencyRates({ USD: 1, EUR: eur, RUB: rub });
+        }
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
   const update = <K extends keyof CalculatorInput>(key: K, value: CalculatorInput[K]) => setInput((current) => ({ ...current, [key]: value }));
   const setScreens = (text: string) => { setScreensText(text); update('screens', Number(text)); };
+  const changeCurrency = (currency: Currency) => {
+    if (currency === input.currency) return;
+    const currentRate = !rateError ? rateValue : input.hourlyRate;
+    const convertedRate = currentRate / currencyRates[input.currency] * currencyRates[currency];
+    const nextRate = Math.max(0.01, Math.round(convertedRate * 100) / 100);
+    setRateText(formatRate(nextRate));
+    setInput((current) => ({ ...current, currency, hourlyRate: nextRate }));
+  };
   const adjustScreens = (amount: number) => {
     const next = Math.min(200, Math.max(1, (screenError ? 1 : screenValue) + amount));
     setScreens(String(next));
@@ -48,7 +84,7 @@ export default function Home() {
   const reset = () => { setInput(DEFAULT_INPUT); setScreensText(String(DEFAULT_INPUT.screens)); setRateText(String(DEFAULT_INPUT.hourlyRate)); setCopied(false); };
   const copyEstimate = async () => {
     const chosen = SERVICES.filter((service) => input.services[service.id]).map((service) => service.label);
-    const text = ['Design project estimate', '', `Project: ${project.label}`, `Screens / pages: ${screensText}`, `Complexity: ${COMPLEXITIES.find((item) => item.id === input.complexity)?.label}`, `Platform: ${PLATFORMS.find((item) => item.id === input.platform)?.label}`, ...(chosen.length ? ['', ...chosen] : []), '', `Estimated workload: ${result.estimatedHours} hours`, `Estimated cost: ${formatCurrency(result.priceMin)}–${formatCurrency(result.priceMax)}`].join('\n');
+    const text = ['Design project estimate', '', `Project: ${project.label}`, `Screens / pages: ${screensText}`, `Complexity: ${COMPLEXITIES.find((item) => item.id === input.complexity)?.label}`, `Platform: ${PLATFORMS.find((item) => item.id === input.platform)?.label}`, `Hourly rate: ${formatCurrency(input.hourlyRate, input.currency)} / hour`, ...(chosen.length ? ['', ...chosen] : []), '', `Estimated workload: ${result.estimatedHours} hours`, `Estimated cost: ${formatCurrency(result.priceMin, input.currency)}–${formatCurrency(result.priceMax, input.currency)}`].join('\n');
     try { await navigator.clipboard.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 1800); } catch { setCopied(false); }
   };
 
@@ -89,20 +125,20 @@ export default function Home() {
             <div className="divider" />
             <ChoiceCards legend="Timeline" choices={TIMELINES} value={input.timeline} onChange={(value) => update('timeline', value as Timeline)} compact />
             <div className="divider" />
-            <fieldset className="field-group"><legend>Hourly rate</legend><p className="field-help">Set your working rate in USD.</p><label className={`rate-input ${rateError ? 'invalid' : ''}`}><span aria-hidden="true">$</span><input aria-label="Hourly rate in US dollars" aria-describedby={rateError ? 'rate-error' : undefined} aria-invalid={rateError} inputMode="decimal" value={rateText} onChange={(event) => { const text = event.target.value.replace(/[^0-9.]/g, ''); setRateText(text); update('hourlyRate', Number(text)); }} /><span>/ hour</span></label>{rateError && <p className="error" id="rate-error" role="alert">Enter a rate greater than $0.</p>}</fieldset>
+            <fieldset className="field-group"><legend>Hourly rate</legend><p className="field-help">Set your working rate in {input.currency}. Currency values update using daily exchange rates.</p><div className={`rate-input ${rateError ? 'invalid' : ''}`}><select className="currency-select" aria-label="Currency" value={input.currency} onChange={(event) => changeCurrency(event.target.value as Currency)}>{CURRENCIES.map((currency) => <option key={currency.id} value={currency.id}>{currency.label}</option>)}</select><input aria-label={`Hourly rate in ${input.currency}`} aria-describedby={rateError ? 'rate-error' : undefined} aria-invalid={rateError} inputMode="decimal" value={rateText} onChange={(event) => { const text = event.target.value.replace(/[^0-9.]/g, ''); setRateText(text); update('hourlyRate', Number(text)); }} /><span>/ hour</span></div>{rateError && <p className="error" id="rate-error" role="alert">Enter a rate greater than 0.</p>}<a className="rate-source" href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates by ExchangeRate-API</a></fieldset>
           </section>
 
           <aside className="price-card" id="estimate" aria-labelledby="estimate-title" aria-live="polite">
             <h2 id="estimate-title">Estimated project cost</h2>
-            <div className="price-range" key={`${result.priceMin}-${result.priceMax}`}>{formatCurrency(result.priceMin)}–{formatCurrency(result.priceMax)}</div>
-            <p className="exact-price">Estimated: <strong>{formatCurrency(result.price)}</strong></p><div className="hours-pill">≈ {result.estimatedHours} hours</div>
-            <div className="breakdown"><h3>Estimate breakdown</h3><ul>{result.breakdown.map((item) => <li key={item.id}><span><strong>{item.title}</strong>{item.hours !== undefined && <small>{item.hours} h</small>}</span><b>{item.price !== undefined ? formatCurrency(item.price) : item.value}</b></li>)}</ul><div className="total-row"><span>Estimated total</span><strong>{formatCurrency(result.price)}</strong></div></div>
+            <div className="price-range" key={`${input.currency}-${result.priceMin}-${result.priceMax}`}>{formatCurrency(result.priceMin, input.currency)}–{formatCurrency(result.priceMax, input.currency)}</div>
+            <div className="hours-pill">≈ {result.estimatedHours} hours</div>
+            <div className="breakdown"><h3>Estimate breakdown</h3><ul>{result.breakdown.map((item) => <li key={item.id}><span><strong>{item.title}</strong>{item.hours !== undefined && <small>{item.hours} h</small>}</span><b>{item.price !== undefined ? formatCurrency(item.price, input.currency) : item.value}</b></li>)}</ul><div className="total-row"><span>Estimated total</span><strong>{formatCurrency(result.price, input.currency)}</strong></div></div>
             <button type="button" className="copy-button" onClick={copyEstimate}>{copied ? 'Copied!' : 'Copy estimate'}</button>
             <p className="disclaimer">This is an estimated price. The final cost may change after project discovery and requirements clarification.</p>
           </aside>
         </div>
       </main>
-      <a className="mobile-summary" href="#estimate"><span>Estimated · {result.estimatedHours} h</span><strong>{formatCurrency(result.priceMin)}–{formatCurrency(result.priceMax)}</strong></a>
+      <a className="mobile-summary" href="#estimate"><span>Estimated · {result.estimatedHours} h</span><strong>{formatCurrency(result.priceMin, input.currency)}–{formatCurrency(result.priceMax, input.currency)}</strong></a>
     </>
   );
 }

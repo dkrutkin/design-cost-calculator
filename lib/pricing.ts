@@ -51,6 +51,6 @@ export const SERVICES: { id: ServiceId; label: string; description: string; hour
 
 export const HOURS_PER_ADDITIONAL_SCREEN = 3;
 export const DEFAULT_INPUT: CalculatorInput = {
-  projectType: 'saas', screens: 10, complexity: 'standard', platform: 'web', projectStage: 'existing', timeline: 'flexible', hourlyRate: 30,
+  projectType: 'saas', screens: 10, complexity: 'standard', platform: 'web', projectStage: 'existing', timeline: 'flexible', currency: 'USD', hourlyRate: 30,
   services: { research: false, competitorAnalysis: false, userFlow: false, wireframes: false, prototype: false, usabilityTesting: false, designSystem: false, responsive: false, developerHandoff: false, designSupport: false },
 };

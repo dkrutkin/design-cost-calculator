@@ -3,6 +3,7 @@ export type Complexity = 'standard' | 'advanced' | 'complex';
 export type Platform = 'web' | 'ios' | 'android' | 'ios-android' | 'web-mobile';
 export type ProjectStage = 'new' | 'existing' | 'improvement';
 export type Timeline = 'flexible' | 'priority' | 'urgent';
+export type Currency = 'USD' | 'EUR' | 'RUB';
 export type ServiceId = 'research' | 'competitorAnalysis' | 'userFlow' | 'wireframes' | 'prototype' | 'usabilityTesting' | 'designSystem' | 'responsive' | 'developerHandoff' | 'designSupport';
 
 export type CalculatorInput = {
@@ -12,6 +13,7 @@ export type CalculatorInput = {
   platform: Platform;
   projectStage: ProjectStage;
   timeline: Timeline;
+  currency: Currency;
   hourlyRate: number;
   services: Record<ServiceId, boolean>;
 };

@@ -1,5 +1,5 @@
 import { COMPLEXITIES, HOURS_PER_ADDITIONAL_SCREEN, PLATFORMS, PROJECT_STAGES, PROJECT_TYPES, SERVICES, TIMELINES } from './pricing';
-import type { CalculatorInput, CalculatorResult } from './types';
+import type { CalculatorInput, CalculatorResult, Currency } from './types';
 
 const roundTen = (value: number) => Math.round(value / 10) * 10;
 
@@ -37,4 +37,4 @@ export function calculateEstimate(input: CalculatorInput): CalculatorResult {
   return { estimatedHours: Math.round(rawHours), price: roundTen(rawPrice), priceMin: roundTen(rawPrice * 0.9), priceMax: roundTen(rawPrice * 1.1), breakdown };
 }
 
-export const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+export const formatCurrency = (value: number, currency: Currency = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency, currencyDisplay: 'narrowSymbol', maximumFractionDigits: 0 }).format(value);

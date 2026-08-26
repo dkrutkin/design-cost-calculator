@@ -103,7 +103,6 @@ export default function Home() {
         </div>
       </main>
       <a className="mobile-summary" href="#estimate"><span>Estimated · {result.estimatedHours} h</span><strong>{formatCurrency(result.priceMin)}–{formatCurrency(result.priceMax)}</strong></a>
-      <footer><div><strong>Design Cost Calculator</strong><span>Estimates are indicative and may change after project discovery.</span></div></footer>
     </>
   );
 }

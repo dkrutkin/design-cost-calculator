@@ -135,7 +135,7 @@ export default function Home() {
 
           <aside className="price-card" id="estimate" aria-labelledby="estimate-title" aria-live="polite">
             <h2 id="estimate-title">Estimated project cost</h2>
-            <div className="price-range" key={`${input.currency}-${result.priceMin}-${result.priceMax}`}>{formatCurrency(result.priceMin, input.currency)}–{formatCurrency(result.priceMax, input.currency)}</div>
+            <div className="price-range" key={`${input.currency}-${result.priceMin}-${result.priceMax}`}><span>{formatCurrency(result.priceMin, input.currency)}</span><span>–{formatCurrency(result.priceMax, input.currency)}</span></div>
             <div className="hours-pill">≈ {result.estimatedHours} hours</div>
             <div className="breakdown"><h3>Estimate breakdown</h3><ul>{result.breakdown.map((item) => <li key={item.id}><span><strong>{item.title}</strong>{item.hours !== undefined && <small>{item.hours} h</small>}</span><b>{item.price !== undefined ? formatCurrency(item.price, input.currency) : item.value}</b></li>)}</ul><div className="total-row"><span>Estimated total</span><strong>{formatCurrency(result.price, input.currency)}</strong></div></div>
             <button type="button" className="copy-button" onClick={copyEstimate}>{copied ? 'Copied!' : 'Copy estimate'}</button>

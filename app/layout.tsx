@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL('https://dkrutkin-design-cost-calculator.lun2t1k.chatgpt.site'),
   title: 'Design Cost Calculator',
   description: 'Calculate an estimated cost for your UX/UI or product design project.',
   icons: { icon: '/favicon.svg' },

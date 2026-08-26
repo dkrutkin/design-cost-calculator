@@ -93,7 +93,7 @@ export default function Home() {
           </section>
 
           <aside className="price-card" id="estimate" aria-labelledby="estimate-title" aria-live="polite">
-            <p className="section-kicker">Live estimate</p><h2 id="estimate-title">Estimated project cost</h2>
+            <h2 id="estimate-title">Estimated project cost</h2>
             <div className="price-range" key={`${result.priceMin}-${result.priceMax}`}>{formatCurrency(result.priceMin)}–{formatCurrency(result.priceMax)}</div>
             <p className="exact-price">Estimated: <strong>{formatCurrency(result.price)}</strong></p><div className="hours-pill">≈ {result.estimatedHours} hours</div>
             <div className="breakdown"><h3>Estimate breakdown</h3><ul>{result.breakdown.map((item) => <li key={item.id}><span><strong>{item.title}</strong>{item.hours !== undefined && <small>{item.hours} h</small>}</span><b>{formatCurrency(item.price)}</b></li>)}</ul><div className="total-row"><span>Estimated total</span><strong>{formatCurrency(result.price)}</strong></div></div>

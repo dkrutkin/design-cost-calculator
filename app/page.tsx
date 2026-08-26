@@ -96,7 +96,7 @@ export default function Home() {
             <h2 id="estimate-title">Estimated project cost</h2>
             <div className="price-range" key={`${result.priceMin}-${result.priceMax}`}>{formatCurrency(result.priceMin)}–{formatCurrency(result.priceMax)}</div>
             <p className="exact-price">Estimated: <strong>{formatCurrency(result.price)}</strong></p><div className="hours-pill">≈ {result.estimatedHours} hours</div>
-            <div className="breakdown"><h3>Estimate breakdown</h3><ul>{result.breakdown.map((item) => <li key={item.id}><span><strong>{item.title}</strong>{item.hours !== undefined && <small>{item.hours} h</small>}</span><b>{formatCurrency(item.price)}</b></li>)}</ul><div className="total-row"><span>Estimated total</span><strong>{formatCurrency(result.price)}</strong></div></div>
+            <div className="breakdown"><h3>Estimate breakdown</h3><ul>{result.breakdown.map((item) => <li key={item.id}><span><strong>{item.title}</strong>{item.hours !== undefined && <small>{item.hours} h</small>}</span><b>{item.price !== undefined ? formatCurrency(item.price) : item.value}</b></li>)}</ul><div className="total-row"><span>Estimated total</span><strong>{formatCurrency(result.price)}</strong></div></div>
             <button type="button" className="copy-button" onClick={copyEstimate}>{copied ? 'Copied!' : 'Copy estimate'}</button>
             <p className="disclaimer">This is an estimated price. The final cost may change after project discovery and requirements clarification.</p>
           </aside>

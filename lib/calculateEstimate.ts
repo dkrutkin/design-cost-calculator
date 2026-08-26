@@ -20,12 +20,19 @@ export function calculateEstimate(input: CalculatorInput): CalculatorResult {
   const designBasePrice = uiHours * complexity.multiplier * platform.multiplier * stage.multiplier * validRate;
   const breakdown = [
     { id: 'product-design', title: `${project.label} design`, hours: Math.round(uiHours * complexity.multiplier * platform.multiplier * stage.multiplier), price: roundTen(designBasePrice) },
+    { id: 'complexity', title: `Complexity · ${complexity.label}`, value: `×${complexity.multiplier}` },
+    { id: 'platform', title: `Platform · ${platform.label}`, value: `×${platform.multiplier}` },
+    { id: 'project-stage', title: `Project stage · ${stage.label}`, value: `×${stage.multiplier}` },
     ...selectedServices.map((service) => {
       const hours = (service.hours ?? uiHours * (service.percent ?? 0)) * complexity.multiplier * platform.multiplier * stage.multiplier;
       return { id: service.id, title: service.label, hours: Math.round(hours), price: roundTen(hours * validRate) };
     }),
   ];
-  if (timeline.multiplier > 1) breakdown.push({ id: 'timeline', title: `${timeline.label} timeline`, price: roundTen(rawPrice - rawPrice / timeline.multiplier) });
+  breakdown.push(
+    timeline.multiplier > 1
+      ? { id: 'timeline', title: `Timeline · ${timeline.label} (×${timeline.multiplier})`, price: roundTen(rawPrice - rawPrice / timeline.multiplier) }
+      : { id: 'timeline', title: `Timeline · ${timeline.label}`, value: `×${timeline.multiplier}` },
+  );
   return { estimatedHours: Math.round(rawHours), price: roundTen(rawPrice), priceMin: roundTen(rawPrice * 0.9), priceMax: roundTen(rawPrice * 1.1), breakdown };
 }
 

@@ -16,5 +16,5 @@ export type CalculatorInput = {
   services: Record<ServiceId, boolean>;
 };
 
-export type BreakdownItem = { id: string; title: string; hours?: number; price: number };
+export type BreakdownItem = { id: string; title: string; hours?: number; price?: number; value?: string };
 export type CalculatorResult = { estimatedHours: number; price: number; priceMin: number; priceMax: number; breakdown: BreakdownItem[] };

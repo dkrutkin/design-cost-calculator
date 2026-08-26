@@ -1,5 +1,5 @@
 import { COMPLEXITIES, HOURS_PER_ADDITIONAL_SCREEN, PLATFORMS, PROJECT_STAGES, PROJECT_TYPES, SERVICES, TIMELINES } from './pricing';
-import type { CalculatorInput, CalculatorResult, Currency } from './types';
+import type { BreakdownItem, CalculatorInput, CalculatorResult, Currency } from './types';
 
 const roundTen = (value: number) => Math.round(value / 10) * 10;
 
@@ -18,7 +18,7 @@ export function calculateEstimate(input: CalculatorInput): CalculatorResult {
   const rawHours = (uiHours + serviceHours) * complexity.multiplier * platform.multiplier * stage.multiplier;
   const rawPrice = rawHours * validRate * timeline.multiplier;
   const designBasePrice = uiHours * complexity.multiplier * platform.multiplier * stage.multiplier * validRate;
-  const breakdown = [
+  const breakdown: BreakdownItem[] = [
     { id: 'product-type', title: `Project type · ${project.label}`, hours: Math.round(uiHours * complexity.multiplier * platform.multiplier * stage.multiplier), price: roundTen(designBasePrice) },
     { id: 'screens', title: 'Screens / pages', value: String(validScreens) },
     { id: 'complexity', title: `Complexity · ${complexity.label}`, value: `×${complexity.multiplier}` },

@@ -19,7 +19,8 @@ export function calculateEstimate(input: CalculatorInput): CalculatorResult {
   const rawPrice = rawHours * validRate * timeline.multiplier;
   const designBasePrice = uiHours * complexity.multiplier * platform.multiplier * stage.multiplier * validRate;
   const breakdown = [
-    { id: 'product-design', title: `${project.label} design`, hours: Math.round(uiHours * complexity.multiplier * platform.multiplier * stage.multiplier), price: roundTen(designBasePrice) },
+    { id: 'product-type', title: `Project type · ${project.label}`, hours: Math.round(uiHours * complexity.multiplier * platform.multiplier * stage.multiplier), price: roundTen(designBasePrice) },
+    { id: 'screens', title: 'Screens / pages', value: String(validScreens) },
     { id: 'complexity', title: `Complexity · ${complexity.label}`, value: `×${complexity.multiplier}` },
     { id: 'platform', title: `Platform · ${platform.label}`, value: `×${platform.multiplier}` },
     { id: 'project-stage', title: `Project stage · ${stage.label}`, value: `×${stage.multiplier}` },

@@ -77,6 +77,11 @@ export default function Home() {
     setRateText(formatRate(nextRate));
     setInput((current) => ({ ...current, currency, hourlyRate: nextRate }));
   };
+  const cycleCurrency = () => {
+    const currentIndex = CURRENCIES.findIndex((currency) => currency.id === input.currency);
+    const nextCurrency = CURRENCIES[(currentIndex + 1) % CURRENCIES.length];
+    changeCurrency(nextCurrency.id);
+  };
   const adjustScreens = (amount: number) => {
     const next = Math.min(200, Math.max(1, (screenError ? 1 : screenValue) + amount));
     setScreens(String(next));
@@ -125,7 +130,7 @@ export default function Home() {
             <div className="divider" />
             <ChoiceCards legend="Timeline" choices={TIMELINES} value={input.timeline} onChange={(value) => update('timeline', value as Timeline)} compact />
             <div className="divider" />
-            <fieldset className="field-group"><legend>Hourly rate</legend><p className="field-help">Set your working rate in {input.currency}. Currency values update using daily exchange rates.</p><div className={`rate-input ${rateError ? 'invalid' : ''}`}><select className="currency-select" aria-label="Currency" value={input.currency} onChange={(event) => changeCurrency(event.target.value as Currency)}>{CURRENCIES.map((currency) => <option key={currency.id} value={currency.id}>{currency.label}</option>)}</select><input aria-label={`Hourly rate in ${input.currency}`} aria-describedby={rateError ? 'rate-error' : undefined} aria-invalid={rateError} inputMode="decimal" value={rateText} onChange={(event) => { const text = event.target.value.replace(/[^0-9.]/g, ''); setRateText(text); update('hourlyRate', Number(text)); }} /><span>/ hour</span></div>{rateError && <p className="error" id="rate-error" role="alert">Enter a rate greater than 0.</p>}<a className="rate-source" href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates by ExchangeRate-API</a></fieldset>
+            <fieldset className="field-group"><legend>Hourly rate</legend><p className="field-help">Set your working rate in {input.currency}. Currency values update using daily exchange rates.</p><div className={`rate-input ${rateError ? 'invalid' : ''}`}><button type="button" className="currency-button" aria-label={`Currency: ${input.currency}. Click to switch currency`} onClick={cycleCurrency}>{CURRENCIES.find((currency) => currency.id === input.currency)?.label}</button><input aria-label={`Hourly rate in ${input.currency}`} aria-describedby={rateError ? 'rate-error' : undefined} aria-invalid={rateError} inputMode="decimal" value={rateText} onChange={(event) => { const text = event.target.value.replace(/[^0-9.]/g, ''); setRateText(text); update('hourlyRate', Number(text)); }} /><span>/ hour</span></div>{rateError && <p className="error" id="rate-error" role="alert">Enter a rate greater than 0.</p>}<a className="rate-source" href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates by ExchangeRate-API</a></fieldset>
           </section>
 
           <aside className="price-card" id="estimate" aria-labelledby="estimate-title" aria-live="polite">

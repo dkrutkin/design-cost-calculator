@@ -11,12 +11,16 @@ export function calculateEstimate(input: CalculatorInput): CalculatorResult {
   const timeline = TIMELINES.find((item) => item.id === input.timeline)!;
   const validScreens = Number.isFinite(input.screens) ? Math.min(200, Math.max(1, Math.round(input.screens))) : 1;
   const validRate = Number.isFinite(input.hourlyRate) ? Math.max(1, input.hourlyRate) : 1;
+  const validDiscount = Number.isFinite(input.discountPercent) ? Math.min(100, Math.max(0, input.discountPercent)) : 0;
   const screenHours = Math.max(0, validScreens - 1) * HOURS_PER_ADDITIONAL_SCREEN;
   const uiHours = project.baseHours + screenHours;
   const selectedServices = SERVICES.filter((service) => input.services[service.id]);
   const serviceHours = selectedServices.reduce((total, service) => total + (service.hours ?? uiHours * (service.percent ?? 0)), 0);
   const rawHours = (uiHours + serviceHours) * complexity.multiplier * platform.multiplier * stage.multiplier;
-  const rawPrice = rawHours * validRate * timeline.multiplier;
+  const priceBeforeTimeline = rawHours * validRate;
+  const priceBeforeDiscount = priceBeforeTimeline * timeline.multiplier;
+  const discountAmount = priceBeforeDiscount * validDiscount / 100;
+  const rawPrice = priceBeforeDiscount - discountAmount;
   const designBasePrice = uiHours * complexity.multiplier * platform.multiplier * stage.multiplier * validRate;
   const breakdown: BreakdownItem[] = [
     { id: 'product-type', title: `Project type · ${project.label}`, hours: Math.round(uiHours * complexity.multiplier * platform.multiplier * stage.multiplier), price: roundTen(designBasePrice) },
@@ -31,9 +35,10 @@ export function calculateEstimate(input: CalculatorInput): CalculatorResult {
   ];
   breakdown.push(
     timeline.multiplier > 1
-      ? { id: 'timeline', title: `Timeline · ${timeline.label} (×${timeline.multiplier})`, price: roundTen(rawPrice - rawPrice / timeline.multiplier) }
+      ? { id: 'timeline', title: `Timeline · ${timeline.label} (×${timeline.multiplier})`, price: roundTen(priceBeforeDiscount - priceBeforeTimeline) }
       : { id: 'timeline', title: `Timeline · ${timeline.label}`, value: `×${timeline.multiplier}` },
   );
+  breakdown.push({ id: 'discount', title: 'Discount', value: validDiscount > 0 ? `−${validDiscount}%` : '0%' });
   return { estimatedHours: Math.round(rawHours), price: roundTen(rawPrice), priceMin: roundTen(rawPrice * 0.9), priceMax: roundTen(rawPrice * 1.1), breakdown };
 }
 

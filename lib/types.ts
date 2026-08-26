@@ -15,6 +15,7 @@ export type CalculatorInput = {
   timeline: Timeline;
   currency: Currency;
   hourlyRate: number;
+  discountPercent: number;
   services: Record<ServiceId, boolean>;
 };
 

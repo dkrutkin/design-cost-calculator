@@ -39,14 +39,17 @@ export default function Home() {
   const [input, setInput] = useState<CalculatorInput>(DEFAULT_INPUT);
   const [screensText, setScreensText] = useState(String(DEFAULT_INPUT.screens));
   const [rateText, setRateText] = useState(String(DEFAULT_INPUT.hourlyRate));
+  const [discountText, setDiscountText] = useState(String(DEFAULT_INPUT.discountPercent));
   const [currencyRates, setCurrencyRates] = useState(FALLBACK_RATES);
   const [copied, setCopied] = useState(false);
   const result = useMemo(() => calculateEstimate(input), [input]);
   const project = PROJECT_TYPES.find((item) => item.id === input.projectType)!;
   const screenValue = Number(screensText);
   const rateValue = Number(rateText);
+  const discountValue = Number(discountText);
   const screenError = screensText === '' || !Number.isInteger(screenValue) || screenValue < 1 || screenValue > 200;
   const rateError = rateText === '' || !Number.isFinite(rateValue) || rateValue <= 0;
+  const discountError = discountText === '' || !Number.isFinite(discountValue) || discountValue < 0 || discountValue > 100;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -69,6 +72,7 @@ export default function Home() {
 
   const update = <K extends keyof CalculatorInput>(key: K, value: CalculatorInput[K]) => setInput((current) => ({ ...current, [key]: value }));
   const setScreens = (text: string) => { setScreensText(text); update('screens', Number(text)); };
+  const setDiscount = (text: string) => { setDiscountText(text); update('discountPercent', Number(text)); };
   const changeCurrency = (currency: Currency) => {
     if (currency === input.currency) return;
     const currentRate = !rateError ? rateValue : input.hourlyRate;
@@ -86,10 +90,14 @@ export default function Home() {
     const next = Math.min(200, Math.max(1, (screenError ? 1 : screenValue) + amount));
     setScreens(String(next));
   };
-  const reset = () => { setInput(DEFAULT_INPUT); setScreensText(String(DEFAULT_INPUT.screens)); setRateText(String(DEFAULT_INPUT.hourlyRate)); setCopied(false); };
+  const adjustDiscount = (amount: number) => {
+    const next = Math.min(100, Math.max(0, (discountError ? 0 : discountValue) + amount));
+    setDiscount(formatRate(next));
+  };
+  const reset = () => { setInput(DEFAULT_INPUT); setScreensText(String(DEFAULT_INPUT.screens)); setRateText(String(DEFAULT_INPUT.hourlyRate)); setDiscountText(String(DEFAULT_INPUT.discountPercent)); setCopied(false); };
   const copyEstimate = async () => {
     const chosen = SERVICES.filter((service) => input.services[service.id]).map((service) => service.label);
-    const text = ['Design project estimate', '', `Project: ${project.label}`, `Screens / pages: ${screensText}`, `Complexity: ${COMPLEXITIES.find((item) => item.id === input.complexity)?.label}`, `Platform: ${PLATFORMS.find((item) => item.id === input.platform)?.label}`, `Hourly rate: ${formatCurrency(input.hourlyRate, input.currency)} / hour`, ...(chosen.length ? ['', ...chosen] : []), '', `Estimated workload: ${result.estimatedHours} hours`, `Estimated cost: ${formatCurrency(result.priceMin, input.currency)}–${formatCurrency(result.priceMax, input.currency)}`].join('\n');
+    const text = ['Design project estimate', '', `Project: ${project.label}`, `Screens / pages: ${screensText}`, `Complexity: ${COMPLEXITIES.find((item) => item.id === input.complexity)?.label}`, `Platform: ${PLATFORMS.find((item) => item.id === input.platform)?.label}`, `Hourly rate: ${formatCurrency(input.hourlyRate, input.currency)} / hour`, `Discount: ${input.discountPercent}%`, ...(chosen.length ? ['', ...chosen] : []), '', `Estimated workload: ${result.estimatedHours} hours`, `Estimated cost: ${formatCurrency(result.priceMin, input.currency)}–${formatCurrency(result.priceMax, input.currency)}`].join('\n');
     try { await navigator.clipboard.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 1800); } catch { setCopied(false); }
   };
 
@@ -131,6 +139,8 @@ export default function Home() {
             <ChoiceCards legend="Timeline" choices={TIMELINES} value={input.timeline} onChange={(value) => update('timeline', value as Timeline)} compact />
             <div className="divider" />
             <fieldset className="field-group"><legend>Hourly rate</legend><p className="field-help">Set your working rate in {input.currency}. Currency values update using daily exchange rates.</p><div className={`rate-input ${rateError ? 'invalid' : ''}`}><button type="button" className="currency-button" aria-label={`Currency: ${input.currency}. Click to switch currency`} onClick={cycleCurrency}>{CURRENCIES.find((currency) => currency.id === input.currency)?.label}</button><input aria-label={`Hourly rate in ${input.currency}`} aria-describedby={rateError ? 'rate-error' : undefined} aria-invalid={rateError} inputMode="decimal" value={rateText} onChange={(event) => { const text = event.target.value.replace(/[^0-9.]/g, ''); setRateText(text); update('hourlyRate', Number(text)); }} /><span>/ hour</span></div>{rateError && <p className="error" id="rate-error" role="alert">Enter a rate greater than 0.</p>}<a className="rate-source" href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates by ExchangeRate-API</a></fieldset>
+            <div className="divider" />
+            <fieldset className="field-group"><legend>Discount</legend><p className="field-help">Deduct a percentage from the final project cost.</p><div className="stepper"><button type="button" aria-label="Decrease discount by 5 percent" onClick={() => adjustDiscount(-5)} disabled={!discountError && discountValue <= 0}>−</button><input aria-label="Discount percentage" aria-describedby={discountError ? 'discount-error' : undefined} aria-invalid={discountError} inputMode="decimal" value={discountText} onChange={(event) => setDiscount(event.target.value.replace(/[^0-9.]/g, ''))} /><button type="button" aria-label="Increase discount by 5 percent" onClick={() => adjustDiscount(5)} disabled={!discountError && discountValue >= 100}>+</button></div>{discountError && <p className="error" id="discount-error" role="alert">Enter a discount between 0 and 100.</p>}</fieldset>
           </section>
 
           <aside className="price-card" id="estimate" aria-labelledby="estimate-title" aria-live="polite">

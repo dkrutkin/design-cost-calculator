@@ -54,7 +54,6 @@ export default function Home() {
 
   return (
     <>
-      <header className="site-header"><a className="brand" href="#top" aria-label="Design Cost Calculator home"><span className="brand-mark">D</span><span>Design Cost Calculator</span></a></header>
       <main id="top" className="page-shell">
         <section className="intro" aria-labelledby="page-title">
           <p className="eyebrow">Project estimator</p><h1 id="page-title">Calculate your design project</h1>

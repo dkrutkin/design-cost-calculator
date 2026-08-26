@@ -56,15 +56,15 @@ export default function Home() {
     <>
       <main id="top" className="page-shell">
         <section className="intro" aria-labelledby="page-title">
-          <p className="eyebrow">Project estimator</p><h1 id="page-title">Calculate your design project</h1>
-          <p>Configure your project to get an estimated design cost.</p><p className="intro-note">The estimate updates automatically as you change the parameters.</p>
+          <h1 id="page-title">Calculate your design project</h1>
+          <p>Configure your project to get an estimated design cost.</p>
         </section>
 
         <div className="calculator-grid">
           <section className="form-card" aria-labelledby="configuration-title">
-            <div className="section-heading"><div><p className="section-kicker">Project</p><h2 id="configuration-title">Project configuration</h2></div><button type="button" className="text-button" onClick={reset}>Reset estimate</button></div>
+            <div className="section-heading"><div><h2 id="configuration-title">Project configuration</h2></div><button type="button" className="text-button" onClick={reset}>Reset estimate</button></div>
 
-            <fieldset className="field-group"><legend>Project type <span className="required">Required</span></legend><div className="project-type-grid">
+            <fieldset className="field-group"><legend>Project type</legend><div className="project-type-grid">
               {PROJECT_TYPES.map((item) => { const selected = input.projectType === item.id; return <button key={item.id} type="button" className={`select-card project-card ${selected ? 'selected' : ''}`} aria-pressed={selected} onClick={() => update('projectType', item.id)}><span className="choice-top"><strong>{item.label}</strong>{selected && <span className="check" aria-hidden="true">✓</span>}</span><small>{item.baseHours} base hours</small></button>; })}
             </div></fieldset>
 
